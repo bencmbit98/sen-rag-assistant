@@ -1,0 +1,49 @@
+# Development Dependencies (Optional)
+# Install with: pip install -r requirements-dev.txt
+
+# Main dependencies (from requirements.txt)
+streamlit==1.31.1
+langchain==0.1.9
+langchain-openai==0.0.6
+langchain-community==0.0.13
+pypdf==4.0.1
+faiss-cpu==1.7.4
+openai==1.3.9
+python-dotenv==1.0.0
+
+# Development & Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.12.0
+flake8==6.1.0
+isort==5.13.2
+mypy==1.7.1
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+
+# Debugging
+debugpy==1.8.1
+ipdb==0.13.13
+
+# Code Quality
+pylint==3.0.3
+bandit==1.7.5
+
+# Performance Monitoring
+py-spy==0.3.14
+memory-profiler==0.61.0
+
+# Alternative Vector Stores (optional)
+# For experimenting with different vector databases
+# weaviate-client==4.1.1
+# pinecone-client==3.0.2
+# chromadb==0.4.18
+
+# Alternative Embeddings (optional)
+# sentence-transformers==2.2.2
+
+# Alternative LLMs (optional)
+# replicate==0.20.0
+# anthropic==0.7.7
