@@ -38,21 +38,28 @@ if "documents_loaded" not in st.session_state:
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # API Key input
-    api_key = st.text_input(
-        "OpenAI API Key",
-        type="password",
-        value=os.getenv("OPENAI_API_KEY", ""),
-        help="Enter your OpenAI API key"
-    )
+    # Load API key from environment (Streamlit secrets)
+    api_key_env = os.getenv("OPENAI_API_KEY", "")
     
+    if api_key_env:
+        # Secret is already set - use it silently
+        api_key = api_key_env
+        st.success("✅ OpenAI API key loaded from secrets")
+    else:
+        # No secret - show input field
+        api_key = st.text_input(
+            "OpenAI API Key",
+            type="password",
+            help="Enter your OpenAI API key (or set as Streamlit secret)"
+        )
+        if api_key:
+            os.environ["OPENAI_API_KEY"] = api_key
+    
+    # Initialize OpenAI client
     if api_key:
-        os.environ["OPENAI_API_KEY"] = api_key
-        # Create and cache OpenAI v1 client
         try:
             st.session_state.openai_client = openai.OpenAI(api_key=api_key)
         except Exception:
-            # Fallback: set env var for older usage
             openai.api_key = api_key
     
     # Load documents button
