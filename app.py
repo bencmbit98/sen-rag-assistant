@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("📚 SEN Guidelines RAG Assistant")
+st.title("📚 TP SEN Guidelines RAG Assistant")
 st.markdown("Ask questions about Special Educational Needs guidelines and resources")
 
 # Initialize session state
