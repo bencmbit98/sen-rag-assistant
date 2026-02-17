@@ -144,7 +144,7 @@ def check_password():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("<h1 style='text-align: center;'>📚 TP SEN Guidelines RAG Assistant</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center;'>Enter password to access the app</p>", unsafe_allow_html=True)
+        # st.markdown("<p style='text-align: center;'>Enter password to access the app</p>", unsafe_allow_html=True)
         st.markdown("")
         st.markdown(
             """
@@ -407,7 +407,7 @@ else:
                         st.error(f"❌ Error during retrieval/generation: {str(e)}")
     
     # Example questions
-    with st.expander("📋 Example Questions"):
+    with st.expander("📋 Some Example Questions you may ask."):
         examples = [
             "What are the guidelines for access arrangements?",
             "How should lecturers support HBL students?",
