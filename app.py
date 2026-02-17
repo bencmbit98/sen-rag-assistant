@@ -27,6 +27,8 @@ st.title("📚 TP SEN Guidelines RAG Assistant")
 st.markdown("Ask questions about Special Educational Needs guidelines and resources")
 
 # Initialize session state
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
 if "vector_store" not in st.session_state:
     st.session_state.vector_store = None
 if "qa_chain" not in st.session_state:
@@ -128,7 +130,44 @@ if not st.session_state.documents_loaded:
         st.session_state.vector_store = vector_store
         st.session_state.documents_loaded = True
 
-# Sidebar configuration
+
+# Authentication check
+def check_password():
+    """Check if password is correct"""
+    correct_password = os.getenv("APP_PASSWORD", "")
+    
+    if not correct_password:
+        st.error("❌ APP_PASSWORD not configured in secrets!")
+        return False
+    
+    if st.session_state.authenticated:
+        return True
+    
+    # Show login page
+    st.title("📚 TP SEN Guidelines RAG Assistant")
+    st.markdown("Authentication Required")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        password = st.text_input(
+            "Enter password to access the app:",
+            type="password",
+            placeholder="Enter password"
+        )
+        
+        if st.button("Login", use_container_width=True):
+            if password == correct_password:
+                st.session_state.authenticated = True
+                st.success("✅ Authentication successful!")
+                st.rerun()
+            else:
+                st.error("❌ Incorrect password. Please try again.")
+    
+    st.stop()
+
+
+# Verify authentication before showing app
+check_password()
 with st.sidebar:
     st.header("⚙️ Configuration")
     
@@ -265,9 +304,8 @@ if not st.session_state.documents_loaded:
     st.info(
         """
         👈 **Getting Started:**
-        1. Enter your OpenAI API key in the sidebar
-        2. Documents will load automatically
-        3. Then ask your questions about the SEN guidelines!
+        1. Documents are loading automatically in the background
+        2. Then ask your questions about the SEN guidelines!
         
         **What this app does:**
         - Automatically loads and processes PDF documents from the `docs` folder
