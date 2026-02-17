@@ -146,6 +146,11 @@ def check_password():
         st.markdown("<h1 style='text-align: center;'>📚 TP SEN Guidelines RAG Assistant</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center;'>Enter password to access the app</p>", unsafe_allow_html=True)
         st.markdown("")
+        st.markdown(
+            """
+            This app allows to seek answers from documents that outline a comprehensive ecosystem of support and inclusion for individuals with disabilities in Singapore, spanning early childhood to adulthood. It focus on enhancing employability through specialized talent acceleration programmes, while broader guidelines detail essential care services, including home-based assistance and financial grants. Significant emphasis is placed on educational support, providing educators with strategies to manage student well-being, crisis intervention, and the use of assistive technologies like speech-to-text software. Furthermore, the documents establish standards for inclusive language to foster respect and reduce social stigma within the community. Legal protections and transportation accessibility are also addressed, ensuring that individuals can navigate society with greater independence. Together, these sources serve as a holistic app for caregivers, educators, and professionals to improve the quality of life for those with special needs.
+            """
+        )
         
         password = st.text_input(
             "Password",
@@ -386,6 +391,11 @@ else:
                             st.success("Answer found!")
                             st.markdown("### 📝 Answer:")
                             st.markdown(answer)
+                            st.markdown(
+                                """
+                                **IMPORTANT NOTICE:** This application is a working prototype developed for testing purposes only. The information provided here is NOT intended for real-world usage and should not be relied upon for making any decisions, especially those related to financial, legal, or healthcare matters. Furthermore, please be aware that the app may generate inaccurate or incorrect information. You assume full responsibility for how you use any generated output. Always consult with qualified professionals for accurate and personalized advice.
+                                """
+                            )
                             if any(s for s in sources):
                                 st.markdown("### 📚 Sources:")
                                 for s in set([s for s in sources if s]):
