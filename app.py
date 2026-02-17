@@ -33,37 +33,132 @@ if "qa_chain" not in st.session_state:
     st.session_state.qa_chain = None
 if "documents_loaded" not in st.session_state:
     st.session_state.documents_loaded = False
+if "documents_loading" not in st.session_state:
+    st.session_state.documents_loading = False
+
+
+# Attempt to auto-load documents on startup
+@st.cache_resource
+def load_documents_auto():
+    """Auto-load documents from existing index or PDFs"""
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    
+    if not api_key:
+        return None
+    
+    try:
+        # Try loading existing FAISS index first (fastest)
+        embeddings = OpenAIEmbeddings()
+        vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
+        return vector_store
+    except Exception:
+        # If no existing index, try loading from PDFs
+        try:
+            documents = []
+            docs_folder = "docs"
+            
+            if not os.path.exists(docs_folder):
+                return None
+            
+            for filename in os.listdir(docs_folder):
+                if filename.endswith(".pdf"):
+                    filepath = os.path.join(docs_folder, filename)
+                    loader = PyPDFLoader(filepath)
+                    documents.extend(loader.load())
+            
+            if not documents:
+                return None
+            
+            # Split documents into chunks
+            def _chunk_text(text, chunk_size=1000, chunk_overlap=200):
+                if not text:
+                    return []
+                chunks = []
+                start = 0
+                text_len = len(text)
+                while start < text_len:
+                    end = start + chunk_size
+                    chunk = text[start:end]
+                    chunks.append(chunk)
+                    if end >= text_len:
+                        break
+                    start = end - chunk_overlap
+                return chunks
+
+            chunks = []
+            metadatas = []
+
+            if _TEXT_SPLITTER_AVAILABLE:
+                text_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=1000,
+                    chunk_overlap=200,
+                    separators=["\n\n", "\n", " ", ""]
+                )
+                split_docs = text_splitter.split_documents(documents)
+                for d in split_docs:
+                    chunks.append(d.page_content)
+                    metadatas.append(d.metadata if hasattr(d, 'metadata') else {})
+            else:
+                for d in documents:
+                    text = getattr(d, "page_content", str(d))
+                    src_meta = getattr(d, "metadata", {})
+                    subchunks = _chunk_text(text, chunk_size=1000, chunk_overlap=200)
+                    for sc in subchunks:
+                        chunks.append(sc)
+                        metadatas.append(src_meta)
+            
+            # Create embeddings and vector store
+            embeddings = OpenAIEmbeddings()
+            try:
+                vector_store = FAISS.from_texts(chunks, embeddings, metadatas=metadatas)
+            except Exception:
+                vector_store = FAISS.from_documents(chunks, embeddings)
+            
+            # Save vector store for future use
+            vector_store.save_local("faiss_index")
+            return vector_store
+        except Exception:
+            return None
+
+
+# Auto-load documents on app startup
+if not st.session_state.documents_loaded:
+    vector_store = load_documents_auto()
+    if vector_store is not None:
+        st.session_state.vector_store = vector_store
+        st.session_state.documents_loaded = True
 
 # Sidebar configuration
 with st.sidebar:
     st.header("⚙️ Configuration")
     
-    # Load API key from environment (Streamlit secrets)
-    api_key_env = os.getenv("OPENAI_API_KEY", "")
+    # Check for API key from environment (Streamlit secrets)
+    api_key = os.getenv("OPENAI_API_KEY", "")
     
-    if api_key_env:
-        # Secret is already set - use it silently
-        api_key = api_key_env
-        st.success("✅ OpenAI API key loaded from secrets")
-    else:
-        # No secret - show input field
-        api_key = st.text_input(
-            "OpenAI API Key",
-            type="password",
-            help="Enter your OpenAI API key (or set as Streamlit secret)"
-        )
-        if api_key:
-            os.environ["OPENAI_API_KEY"] = api_key
-    
-    # Initialize OpenAI client
     if api_key:
+        st.success("✅ OpenAI API key loaded from secrets")
+        # Initialize OpenAI client
         try:
             st.session_state.openai_client = openai.OpenAI(api_key=api_key)
         except Exception:
             openai.api_key = api_key
+    else:
+        st.error("❌ OpenAI API key not found!")
+        st.info(
+            """
+            **To set up your API key:**
+            
+            **Option 1: Streamlit Secrets (Recommended)**
+            - Create `.streamlit/secrets.toml` in your project folder
+            - Add: `OPENAI_API_KEY = "your-api-key-here"`
+            
+            **Option 2: Environment Variable**
+            - Set environment variable: `OPENAI_API_KEY=your-api-key-here`
+            """
+        )
     
-    # Load documents button
-    if st.button("📖 Load Documents", use_container_width=True):
+    # Reload documents button
+    if st.button("🔄 Reload Documents", use_container_width=True):
         if not api_key:
             st.error("❌ Please provide an OpenAI API key first")
         else:
@@ -144,8 +239,8 @@ with st.sidebar:
                 except Exception as e:
                     st.error(f"❌ Error loading documents: {str(e)}")
     
-    # Load existing vector store
-    if st.button("📂 Load Existing Index", use_container_width=True):
+    # Refresh vector store button
+    if st.button("🔄 Refresh from Index", use_container_width=True):
         if not api_key:
             st.error("❌ Please provide an OpenAI API key first")
         else:
@@ -169,13 +264,13 @@ with st.sidebar:
 if not st.session_state.documents_loaded:
     st.info(
         """
-        👈 **Get Started:**
+        👈 **Getting Started:**
         1. Enter your OpenAI API key in the sidebar
-        2. Click "Load Documents" to process the PDFs
-        3. Ask questions about the SEN guidelines!
+        2. Documents will load automatically
+        3. Then ask your questions about the SEN guidelines!
         
         **What this app does:**
-        - Loads and processes PDF documents from the `docs` folder
+        - Automatically loads and processes PDF documents from the `docs` folder
         - Creates a searchable vector index using FAISS
         - Answers your questions using GPT-4 with context from the documents
         """
