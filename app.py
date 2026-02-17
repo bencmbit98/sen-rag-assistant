@@ -23,9 +23,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("📚 TP SEN Guidelines RAG Assistant")
-st.markdown("Ask questions about Special Educational Needs guidelines and resources")
-
 # Initialize session state
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
@@ -144,13 +141,14 @@ def check_password():
         return True
     
     # Show login page
-    st.title("📚 TP SEN Guidelines RAG Assistant")
-    st.markdown("Authentication Required")
-    
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
+        st.markdown("<h1 style='text-align: center;'>📚 TP SEN Guidelines RAG Assistant</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center;'>Enter password to access the app</p>", unsafe_allow_html=True)
+        st.markdown("")
+        
         password = st.text_input(
-            "Enter password to access the app:",
+            "Password",
             type="password",
             placeholder="Enter password"
         )
@@ -168,6 +166,11 @@ def check_password():
 
 # Verify authentication before showing app
 check_password()
+
+st.title("📚 TP SEN Guidelines RAG Assistant")
+st.markdown("Ask questions about Special Educational Needs guidelines and resources")
+
+# Sidebar configuration
 with st.sidebar:
     st.header("⚙️ Configuration")
     
